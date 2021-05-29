@@ -1,0 +1,69 @@
+/*
+** Chess Game Layout
+** Date: 28 May 2021
+*/
+* {
+    padding: 0;
+    margin: 0;
+}
+
+/*
+** Table Styles
+** Date: 28 May 2021
+*/
+
+h1 {
+    text-align: center;
+}
+
+table {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+table td {
+    width: 50px;
+    height: 50px;
+    border: 1px solid black;
+    font-size: 25px;
+    /* position: relative; */
+}
+
+table td i {
+    text-align: center;
+    width: 100%;
+}
+
+table .black {
+    background-color: #962d2d;
+}
+
+table td:not(.black) {
+    background-color: #f4cca4;
+}
+
+table .black.green {
+    background-color: #962d2d;
+    opacity: 0.7;
+    border: #888 solid 2px;
+}
+
+table td:not(.black).green {
+    background-color: #f4cca4;
+    opacity: 0.5;
+    border: #888 solid 2px;
+}
+
+table td .black-peice {
+    color: #000;
+}
+
+table td .white-peice {
+    color: #faf1e6;
+}
+
+table td i:hover {
+    cursor: pointer;
+}
