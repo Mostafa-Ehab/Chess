@@ -1,3 +1,4 @@
+from typing import cast
 from flask import Flask, render_template, request
 from chess import *
 import json
@@ -17,6 +18,8 @@ board = [
          King(7, 4, "White"), Bishop(7, 5, "White"), Knight(7, 6, "White"), Rook(7, 7, "White")],
 ]
 
+turn = 'White'
+
 
 @app.route("/")
 def index():
@@ -29,14 +32,17 @@ def get_moves():
         x = int(request.form['x'])
         y = int(request.form['y'])
         print(board)
+        if board[x][y] != None:
+            result = board[x][y].get_moves(board)
+            print(result)
+            return json.dumps(result)
 
-        result = json.dumps(board[x][y].get_moves(board))
-        print(result)
-        return result
+    return 'Error'
 
 
 @app.route("/make_move", methods=['GET', 'POST'])
 def make_move():
+    global turn
     if len(request.form) == 4:
         # From
         x1 = int(request.form['x1'])
@@ -46,19 +52,128 @@ def make_move():
         x2 = int(request.form['x2'])
         y2 = int(request.form['y2'])
 
-        if ((x2, y2) in board[x1][y1].get_moves(board)):
-            # Assign old cell to selected cell
-            board[x2][y2] = board[x1][y1]
-            board[x2][y2].change_pos(x2, y2)
+        if board[x1][y1] != None and board[x1][y1].get_color() == turn:
 
-            # Remove Old Object Completely from memory
+            if ((x2, y2) in board[x1][y1].get_moves(board)):
+                # Assign old cell to selected cell
+                board[x2][y2] = board[x1][y1]
+                board[x2][y2].change_pos(x2, y2)
+
+                # Remove Old Object Completely from memory
+                buffer = board[x1][y1]
+                board[x1][y1] = None
+                del buffer
+
+                turn = 'Black' if turn == 'White' else 'White'
+
+                if check_end(board, turn) == True:
+                    return 'Ended'
+                return str(0)
+
+    return "Error"
+
+
+@app.route("/promation", methods=['GET', 'POST'])
+def promation():
+    global turn
+    if len(request.form) == 5:
+        # From
+        x1 = int(request.form['x1'])
+        y1 = int(request.form['y1'])
+
+        y2 = int(request.form['y2'])
+
+        name = request.form['name']
+        if board[x1][y1].get_color() == turn and name in ['queen', 'bishop', 'knight', 'rook'] and \
+                board[x1][y1] != None and board[x1][y1].get_name() == 'Pawn' and \
+                board[x1][y1].get_pos()[0] in [1, 6] and board[x1][y1].moved == True \
+                and y2 in [y1, y1 + 1, y1 - 1]:
+            if name == 'queen':
+                temp = Queen(0 if x1 == 1 else 7, y2,
+                             board[x1][y1].get_color())
+            elif name == 'bishop':
+                temp = Bishop(0 if x1 == 1 else 7, y2,
+                              board[x1][y1].get_color())
+            elif name == 'knight':
+                temp = Knight(0 if x1 == 1 else 7, y2,
+                              board[x1][y1].get_color())
+            elif name == 'rook':
+                temp = Rook(0 if x1 == 1 else 7, y2,
+                            board[x1][y1].get_color())
+
+            board[0 if x1 == 1 else 7][y2] = temp
             buffer = board[x1][y1]
             board[x1][y1] = None
             del buffer
 
-            return str(0)
+            turn = 'Black' if turn == 'White' else 'White'
 
-        return "Error"
+            if check_end(board, turn) == True:
+                return 'Ended'
+            return str(0)
+    return 'Error'
+
+
+@app.route("/make_castle", methods=['GET', 'POST'])
+def make_castle():
+    global turn
+    if len(request.form) == 4:
+        # From
+        x1 = int(request.form['x1'])
+        y1 = int(request.form['y1'])
+
+        # To
+        x2 = int(request.form['x2'])
+        y2 = int(request.form['y2'])
+
+        if board[x1][y1].get_color() == turn and board[x1][y1] != None and board[x1][y1].get_name() == 'King':
+            castle = board[x1][y1].check_castle(board)
+
+            if castle != None:
+                if x2 == castle[1][0] and y2 == castle[1][1]:
+                    castle = castle[1]
+                elif len(castle) == 3 and x2 == castle[2][0] and y2 == castle[2][1]:
+                    castle = castle[2]
+                else:
+                    return "Error"
+                # Assign old cell to selected cell
+                board[x2][y2] = board[x1][y1]
+                board[x2][y2].change_pos(x2, y2)
+
+                # Remove Old Object Completely from memory
+                buffer = board[x1][y1]
+                board[x1][y1] = None
+                del buffer
+
+                if y1 > y2:
+                    board[x2][y2 + 1] = board[x1][0]
+                    board[x2][y2 + 1].change_pos(x2, y2 + 1)
+
+                    # Remove Old Object Completely from memory
+                    buffer = board[x1][0]
+                    board[x1][0] = None
+                    del buffer
+
+                    rook = [(x1, 0), (x1, y2 + 1)]
+                else:
+                    board[x2][y2 - 1] = board[x1][7]
+                    board[x2][y2 - 1].change_pos(x2, y2 - 1)
+
+                    # Remove Old Object Completely from memory
+                    buffer = board[x1][0]
+                    board[x1][0] = None
+                    del buffer
+
+                    rook = [(x1, 7), (x1, y2 - 1)]
+
+                turn = 'Black' if turn == 'White' else 'White'
+
+                if check_end(board, turn) == True:
+                    return 'Ended'
+                return str(0)
+
+                # return json.dumps(rook)
+    return 'Error'
 
 
 if __name__ == '__main__':

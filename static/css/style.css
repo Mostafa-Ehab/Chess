@@ -21,6 +21,7 @@ table {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    border-collapse: separate;
 }
 
 table td {
@@ -34,26 +35,40 @@ table td {
 table td i {
     text-align: center;
     width: 100%;
+    font-size: 2rem;
 }
 
 table .black {
     background-color: #962d2d;
 }
 
-table td:not(.black) {
+table .white {
     background-color: #f4cca4;
 }
 
 table .black.green {
-    background-color: #962d2d;
     opacity: 0.7;
     border: #888 solid 2px;
 }
 
-table td:not(.black).green {
-    background-color: #f4cca4;
+table .white.green {
     opacity: 0.5;
     border: #888 solid 2px;
+}
+
+table .black.purple {
+    background-color: blueviolet;
+    opacity: 0.5;
+}
+
+table .white.purple {
+    background-color: blueviolet;
+    opacity: 0.3;
+}
+
+table td.yellow {
+    background-color: yellow;
+    opacity: 0.5;
 }
 
 table td .black-peice {
@@ -66,4 +81,18 @@ table td .white-peice {
 
 table td i:hover {
     cursor: pointer;
+}
+
+/*
+** Style Modal that control Pronation
+** Date: 29 May 2021
+*/
+#promation .grid-container {
+    display: grid;
+    grid-template-columns: 20% 20% 20% 20%;
+    justify-content: space-around;
+}
+
+#promation .grid-container i {
+    font-size: 3rem;
 }
