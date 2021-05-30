@@ -66,9 +66,8 @@ def make_move():
 
                 turn = 'Black' if turn == 'White' else 'White'
 
-                if check_end(board, turn) == True:
-                    return 'Ended'
-                return str(0)
+                ended = check_end(board, turn)
+                return ended if ended != False else str(0)
 
     return "Error"
 
@@ -108,9 +107,8 @@ def promation():
 
             turn = 'Black' if turn == 'White' else 'White'
 
-            if check_end(board, turn) == True:
-                return 'Ended'
-            return str(0)
+            ended = check_end(board, turn)
+            return ended if ended != False else str(0)
     return 'Error'
 
 
@@ -154,7 +152,6 @@ def make_castle():
                     board[x1][0] = None
                     del buffer
 
-                    rook = [(x1, 0), (x1, y2 + 1)]
                 else:
                     board[x2][y2 - 1] = board[x1][7]
                     board[x2][y2 - 1].change_pos(x2, y2 - 1)
@@ -164,16 +161,20 @@ def make_castle():
                     board[x1][0] = None
                     del buffer
 
-                    rook = [(x1, 7), (x1, y2 - 1)]
-
                 turn = 'Black' if turn == 'White' else 'White'
 
-                if check_end(board, turn) == True:
-                    return 'Ended'
-                return str(0)
+                ended = check_end(board, turn)
+                return ended if ended != False else str(0)
 
-                # return json.dumps(rook)
     return 'Error'
+
+
+@app.route("/check_king", methods=['GET', 'POST'])
+def check_king():
+    if len(request.form) == 2:
+        x1 = x2 = int(request.form['x'])
+        y1 = y2 = int(request.form['y'])
+        return '1' if check_king_state(x1, y1, x2, y2, board) == True else '-1'
 
 
 if __name__ == '__main__':

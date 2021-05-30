@@ -465,18 +465,23 @@ def check_end(board, turn):
     ended = True
     for i in range(8):
         for j in range(8):
+            # Check the player has any game
             if ended == True and board[i][j] != None and board[i][j].get_color() == turn:
                 result = board[i][j].get_moves(board)
                 if len(result) != 0:
+                    # There is anther a game for not King peice
                     if board[i][j].get_name() != 'King':
                         return False
+                    # The King have a game
                     ended = False
                     break
 
     if ended == False:
         for i in range(8):
             for j in range(8):
+                # Check if the other player has a game
                 if board[i][j] != None and board[i][j].get_name() != 'King':
                     return False
 
-    return True
+    # Only to Kings Left
+    return str(1) if ended == True else str(-1)

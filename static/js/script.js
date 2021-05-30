@@ -28,8 +28,8 @@ for (let i = 0; i < 8; i++) {
                             cells[i * 8 + j].querySelector("i").setAttribute("class", classes)
                             // Remove Shadows from all cells
                             removeGreen()
-                            check_end(this.response)
-                            turn = (turn == 'White') ? 'Black' : 'White'
+                            changePlayer()
+                            checkEnd(this.response)
                         }
                     }
                     xhttp.open("POST", "/make_move")
@@ -77,8 +77,8 @@ for (let i = 0; i < 8; i++) {
                             // results = JSON.parse(this.response)
                             // Remove Shadows from all cells
                             removeGreen()
-                            check_end(this.response)
-                            turn = (turn == 'White') ? 'Black' : 'White'
+                            changePlayer()
+                            checkEnd(this.response)
                         }
                     }
                     xhttp.open("POST", "/make_castle")
@@ -146,6 +146,25 @@ function getMoves(event, i, j) {
                     }
                     // Mark the cell as selected cell
                     selected = [i, j]
+                } else {
+                    let xhttp = new XMLHttpRequest()
+                    xhttp.onreadystatechange = function () {
+                        if (this.readyState == 4 && this.status == 200) {
+                            console.log(this.response)
+                            if (this.response == "-1") {
+                                let classes = (turn == 'White') ? 'white-peice' : 'black-peice'
+                                document.querySelector('.fa-chess-king.' + classes).parentNode.classList.add('red')
+                                window.setTimeout(function () {
+                                    document.querySelector('.fa-chess-king.' + classes).parentNode.classList.remove('red')
+                                }, 3000);
+                            } else {
+                                console.log("Not Check")
+                            }
+                        }
+                    }
+                    xhttp.open("POST", "/check_king", true);
+                    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                    xhttp.send("&x=" + i + "&y=" + j)
                 }
             }
         }
@@ -178,8 +197,8 @@ function promation(event) {
             // Remove Shadows from all cells
             removeGreen()
             $('#promation').modal('hide')
-            check_end(this.response)
-            turn = (turn == 'White') ? 'Black' : 'White'
+            changePlayer()
+            checkEnd(this.response)
         }
     }
     xhttp.open("POST", "/promation")
@@ -202,12 +221,25 @@ function removeGreen() {
     selected = null
 }
 
-function check_end(response) {
-    if (response == 'Ended') {
+/*
+** Check end of Game
+** 1 if end
+** -1 if tie
+*/
+function checkEnd(response) {
+    if (response == '1') {
         let modal = document.querySelector("#ended")
-        let winner = (turn == 'White') ? '1' : '2'
+        let winner = (turn == 'White') ? '2' : '1'
         modal.querySelector(".winner").innerHTML = "Player " + winner + " won!"
         $('#ended').modal('show')
+    } else if (response == '-1') {
+        let modal = document.querySelector("#ended")
+        modal.querySelector(".winner").innerHTML = "Tie!"
+        $('#ended').modal('show')
     }
+}
+
+function changePlayer() {
+    turn = (turn == 'White') ? 'Black' : 'White'
 }
 

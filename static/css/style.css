@@ -14,6 +14,7 @@
 
 h1 {
     text-align: center;
+    margin-top: 30px;
 }
 
 table {
@@ -22,6 +23,7 @@ table {
     left: 50%;
     transform: translate(-50%, -50%);
     border-collapse: separate;
+    width: 400px;
 }
 
 table td {
@@ -47,13 +49,14 @@ table .white {
 }
 
 table .black.green {
-    opacity: 0.7;
     border: #888 solid 2px;
+    background-color: #9acd32;
 }
 
 table .white.green {
     opacity: 0.5;
     border: #888 solid 2px;
+    background-color: #9acd32;
 }
 
 table .black.purple {
@@ -84,7 +87,24 @@ table td i:hover {
 }
 
 /*
-** Style Modal that control Pronation
+** Style King Check Viewer
+** Date: 30 May 2021
+*/
+table td.red {
+    background-color: #f00;
+    /* animation-name: light;
+    animation-duration: 3s; */
+}
+
+/* @keyframes light {
+  0%   {background-color: rgba(255, 0, 0, 0);}
+  25%  {background-color: rgba(255, 0, 0, 1);}
+  50%  {background-color: rgba(255, 0, 0, 0);}
+  100% {background-color: rgba(255, 0, 0, 1);}
+} */
+
+/*
+** Style Modal that control Promation
 ** Date: 29 May 2021
 */
 #promation .grid-container {
