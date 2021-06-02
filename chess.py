@@ -424,7 +424,7 @@ def check_king_state(x1, y1, x2, y2, board):
     return True
 
 
-def send_moves(board):
+def send_moves(board, turn):
     data = []
     for i in range(8):
         for j in range(8):
@@ -441,22 +441,27 @@ def send_moves(board):
                         for kx2, ky2, rx1, ry1, rx2, ry2 in castle:
                             data.append(
                                 {'castle': [(i, j), (kx2, ky2), (rx1, ry1), (rx2, ry2)], 'color': board[i][j].get_color()})
+                    if board[i][j].get_color() == turn:
+                        king = (i, j)
 
                 if board[i][j].get_name() == 'Pawn':
                     # Pawn Promation
                     for x, y in board[i][j].get_promation(board):
-                        data.append({'promation': [(i, j), (x, y)], 'color': board[i][j].get_color()})
-                        data.remove({'move': [(i, j), (x, y)], 'color': board[i][j].get_color()})
-    return data
+                        data.append(
+                            {'promation': [(i, j), (x, y)], 'color': board[i][j].get_color()})
+                        data.remove(
+                            {'move': [(i, j), (x, y)], 'color': board[i][j].get_color()})
+
+    return (data, king)
 
 
 def escape(s):
-        """
-        Escape special characters.
+    """
+    Escape special characters.
 
-        https://github.com/jacebrowning/memegen#special-characters
-        """
-        for old, new in [("-", "--"), (" ", "-"), ("_", "__"), ("?", "~q"),
-                         ("%", "~p"), ("#", "~h"), ("/", "~s"), ("\"", "''")]:
-            s = s.replace(old, new)
-        return s
+    https://github.com/jacebrowning/memegen#special-characters
+    """
+    for old, new in [("-", "--"), (" ", "-"), ("_", "__"), ("?", "~q"),
+                     ("%", "~p"), ("#", "~h"), ("/", "~s"), ("\"", "''")]:
+        s = s.replace(old, new)
+    return s

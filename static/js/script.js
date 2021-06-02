@@ -182,6 +182,14 @@ socket.on('make_move', function (result) {
     }
 })
 
+socket.on('check', function (king) {
+    console.log(king)
+    let i = king['king'][0]
+    let j = king['king'][1]
+
+    cells[(i * 8) + j].classList.add("red")
+})
+
 socket.on('Oppo_Disconnect', function (msg) {
     document.querySelector("#disconnected p").innerHTML = msg
     $("#disconnected").modal("show")
@@ -234,6 +242,7 @@ function removeMoves() {
         cells[i].classList.remove('green')
         cells[i].classList.remove('yellow')
         cells[i].classList.remove('purple')
+        cells[i].classList.remove('red')
         cells[i].classList.remove('can-move')
     }
     selected = null

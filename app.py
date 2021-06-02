@@ -161,7 +161,7 @@ def on_connect():
     else:
         token = session['token']
         join_room(token)
-        data = send_moves(BOARDS[token])
+        data = send_moves(BOARDS[token], 'White')
         emit('update_moves', data, room=token, namespace='/game')
 
 
@@ -282,11 +282,18 @@ def make_move(response):
                             emit('make_move', {
                                 'color': BOARDS[token][x2][y2].get_color(), 'move': [(rx1, ry1), (rx2, ry2)]}, room=token, namespace='/game')
 
-            data = send_moves(BOARDS[token])
             TURNS[token] = 'Black' if turn == 'White' else 'White'
             turn = TURNS[token]
+            data, king = send_moves(BOARDS[token], turn)
 
             emit('update_moves', data, room=token, namespace='/game')
+
+            for row in data:
+                if row['color'] != turn and (('move' in row and row['move'][1] == king) or
+                                             ('castle' in row and row['castle'][3] == king) or
+                                             ('promation' in row and row['promation'][1] == king)):
+                    emit('check', {'king': king}, room=token, namespace='/game')
+                    break
 
             white_result = []
             black_result = []
