@@ -1,245 +1,281 @@
-let table = document.querySelector("table")
+const socket = io("/game")
+// socket.emit('move', 'get')
+const color = (document.querySelector("table").classList.contains('white-board')) ? 'White' : 'Black'
+let turn = (color == 'White') ? true : false
+changeTurn(turn)
 let cells = document.querySelectorAll("td")
 
-// To Trace the Shaded Cells
-let selected = null
-let turn = document.querySelector("table").getAttribute("data-turn")
+class Cell {
+    constructor(x, y) {
+        this.x = x
+        this.y = y
+        this.moves = []
+    }
 
+    addMoves(type, result) {
+        // Set Moves Object
+        let move = {}
+        if (type == 'move') {
+            // Unpack Results
+            let x1 = result[0][0]
+            let y1 = result[0][1]
+            let x2 = result[1][0]
+            let y2 = result[1][1]
+
+            move['type'] = 'move'
+            move['coor'] = String(x2) + String(y2)
+            move['show'] = function () { showMove((x2 * 8) + y2, 'green') }
+            move['make'] = function () { makeMove((x1 * 8) + y1, (x2 * 8) + y2) }
+            move['send'] = { 'move': [[x1, y1], [x2, y2]] }
+
+        } else if (type == 'promation') {
+            // Unpack Results
+            let x1 = result[0][0]
+            let y1 = result[0][1]
+            let x2 = result[1][0]
+            let y2 = result[1][1]
+
+            move['type'] = 'promation'
+            move['coor'] = String(x2) + String(y2)
+            move['show'] = function () { showMove((x2 * 8) + y2, 'yellow') }
+            move['make'] = function () {
+                makeMove((x1 * 8) + y1, (x2 * 8) + y2)
+                /*
+                ** Show Modal that ask for the Promation
+                */
+                $("#promation").modal('show')
+                let modal = document.querySelector("#promation")
+                modal.setAttribute("data-x1", x1)
+                modal.setAttribute("data-y1", y1)
+                modal.setAttribute("data-x2", x2)
+                modal.setAttribute("data-y2", y2)
+
+                let buttons = modal.querySelectorAll("button")
+                for (let k = 0, len = buttons.length; k < len; k++) {
+                    buttons[k].addEventListener("click", promation)
+                }
+            }
+            move['send'] = { 'promation': [[x1, y1], [x2, y2]] }
+
+        } else if (type == 'castle') {
+            // Unpack Results
+            let kx1 = result[0][0]
+            let ky1 = result[0][1]
+            let kx2 = result[1][0]
+            let ky2 = result[1][1]
+            let rx1 = result[2][0]
+            let ry1 = result[2][1]
+            let rx2 = result[3][0]
+            let ry2 = result[3][1]
+
+
+            move['type'] = 'castle'
+            move['coor'] = String(kx2) + String(ky2)
+            move['show'] = function () { showMove((kx2 * 8) + ky2, 'purple') }
+            move['make'] = function () {
+                makeMove((kx1 * 8) + ky1, (kx2 * 8) + ky2)
+                makeMove((rx1 * 8) + ry1, (rx2 * 8) + ry2)
+            }
+            move['send'] = { 'castle': [[kx1, ky1], [kx2, ky2]] }
+        }
+        // Push Object to the Array
+        this.moves.push(move)
+    }
+
+    resetMoves() {
+        this.moves = []
+    }
+
+    showMoves() {
+        for (let i = 0, len = this.moves.length; i < len; i++) {
+            this.moves[i].show()
+        }
+    }
+
+    makeMoves(x, y) {
+        for (let i = 0, len = this.moves.length; i < len; i++) {
+            if (this.moves[i]['coor'] == String(x) + String(y)) {
+                this.moves[i].make()
+                if (this.moves[i]['type'] == 'move' || this.moves[i]['type'] == 'castle') {
+                    socket.emit('make_move', this.moves[i].send)
+                }
+            }
+        }
+        changeTurn(false)
+        removeMoves()
+    }
+}
+
+let data = {}
+let selected = null
 for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
+        data[(i * 8) + j] = new Cell(i, j)
         cells[(i * 8) + j].addEventListener("click", function (event) {
-
-            // If the Selected cell wasn't selected or no cells are selected
+            // No selected Cell
             if (selected == null) {
-                // Remove shadows from the cells
-                removeGreen()
-                // Get the posible moves for the selected cell
-                getMoves(event, i, j)
+                data[(i * 8 + j)].showMoves()
+                selected = [i, j]
+
+                // Current Selected Cell
+            } else if (selected[0] == i && selected[1] == j) {
+                removeMoves()
             }
-            else if (selected[0] != i || selected[1] != j) {
-                if (event.currentTarget.classList.contains("green")) {
-                    let xhttp = new XMLHttpRequest()
-                    xhttp.onreadystatechange = function () {
-                        if (this.readyState == 4 && this.status == 200) {
-                            console.log(this.response)
-                            // Get All classes from old cell to the new cell
-                            let classes = cells[selected[0] * 8 + selected[1]].querySelector("i").getAttribute("class")
-                            cells[selected[0] * 8 + selected[1]].querySelector("i").removeAttribute("class")
-                            cells[i * 8 + j].querySelector("i").setAttribute("class", classes)
-                            // Remove Shadows from all cells
-                            removeGreen()
-                            changePlayer()
-                            checkEnd(this.response)
-                        }
-                    }
-                    xhttp.open("POST", "/make_move")
-                    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                    xhttp.send("&x1=" + selected[0] + "&y1=" + selected[1] + "&x2=" + i + "&y2=" + j)
-                } else if (event.currentTarget.classList.contains("purple")) {
-                    let xhttp = new XMLHttpRequest()
-                    xhttp.onreadystatechange = function () {
-                        if (this.readyState == 4 && this.status == 200) {
-                            console.log(this.response)
-                            if (selected[0] == 0) {
-                                king1 = 4
-                                if (j == 2) {
-                                    king2 = 2
-                                    rook1 = 0
-                                    rook2 = 3
-                                }
-                                else {
-                                    king2 = 2
-                                    rook1 = 7
-                                    rook2 = 5
-                                }
-                            }
-                            else {
-                                king1 = 60
-                                if (j == 2) {
-                                    king2 = 58
-                                    rook1 = 56
-                                    rook2 = 59
-                                }
-                                else {
-                                    king2 = 62
-                                    rook1 = 63
-                                    rook2 = 61
-                                }
-                            }
-                            // The King
-                            let classes = cells[king1].querySelector("i").getAttribute("class")
-                            cells[king1].querySelector("i").removeAttribute("class")
-                            cells[king2].querySelector("i").setAttribute("class", classes)
-                            // The Rook
-                            classes = cells[rook1].querySelector("i").getAttribute("class")
-                            cells[rook1].querySelector("i").removeAttribute("class")
-                            cells[rook2].querySelector("i").setAttribute("class", classes)
-                            // results = JSON.parse(this.response)
-                            // Remove Shadows from all cells
-                            removeGreen()
-                            changePlayer()
-                            checkEnd(this.response)
-                        }
-                    }
-                    xhttp.open("POST", "/make_castle")
-                    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                    xhttp.send("&x1=" + selected[0] + "&y1=" + selected[1] + "&x2=" + i + "&y2=" + j)
-                } else if (event.currentTarget.classList.contains("yellow")) {
-                    let modal = document.querySelector("#promation")
-                    modal.setAttribute("data-i", i)
-                    modal.setAttribute("data-j", j)
-                    /*
-                    ** ****************** **
-                    ** If the Pawn reched the end then show a modal that askes for the promation
-                    ** ****************** **
-                    */
-                    $("#promation").modal('show')
-                    buttons = modal.querySelectorAll("button")
-                    for (let k = 0, len = buttons.length; k < len; k++) {
-                        buttons[k].addEventListener("click", promation)
-                    }
-                } else {
-                    removeGreen()
-                    getMoves(event, i, j)
-                }
-            } else {
-                removeGreen()
+
+            // Cell that can make a move
+            else if (event.currentTarget.classList.contains("can-move")) {
+                data[(selected[0] * 8) + selected[1]].makeMoves(i, j)
+                removeMoves()
+            }
+
+            // An Empty or another Cell
+            else {
+                removeMoves()
+                data[(i * 8 + j)].showMoves()
+                selected = [i, j]
             }
         })
     }
 }
 
 /*
-** Get Posible moves for Selected cell
+** A function that Responsible for Updating move list from server
 */
-function getMoves(event, i, j) {
-    let player = (turn == 'White') ? 'white-peice' : 'black-peice'
-    if (event.currentTarget.querySelector('i').classList.length != 0
-        && event.currentTarget.querySelector('i').classList.contains(player)) {
-        let xhttp = new XMLHttpRequest()
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                results = JSON.parse(this.response)
-                console.log(results)
-                if (results.length != 0) {
-                    for (let k = 0, len = results.length; k < len; k++) {
-                        // Check if Can Castle
-                        if (results[k][0] == 'Castle') {
-                            x = results[k][1][0]
-                            y = results[k][1][1]
-                            cells[(x * 8) + y].classList.add("purple")
-                            if (results[k].length == 3) {
-                                x = results[k][2][0]
-                                y = results[k][2][1]
-                                cells[(x * 8) + y].classList.add("purple")
-                            }
-                        } else if (results[k][0] == 'Upgrade') {
-                            x = results[k][1][0]
-                            y = results[k][1][1]
-                            cells[(x * 8) + y].classList.add("yellow")
-                        } else {
-                            x = results[k][0]
-                            y = results[k][1]
-                            // Add shadows to the posible moves cells
-                            cells[(x * 8) + y].classList.add("green")
-                        }
-                    }
-                    // Mark the cell as selected cell
-                    selected = [i, j]
-                } else {
-                    let xhttp = new XMLHttpRequest()
-                    xhttp.onreadystatechange = function () {
-                        if (this.readyState == 4 && this.status == 200) {
-                            console.log(this.response)
-                            if (this.response == "-1") {
-                                let classes = (turn == 'White') ? 'white-peice' : 'black-peice'
-                                document.querySelector('.fa-chess-king.' + classes).parentNode.classList.add('red')
-                                window.setTimeout(function () {
-                                    document.querySelector('.fa-chess-king.' + classes).parentNode.classList.remove('red')
-                                }, 3000);
-                            } else {
-                                console.log("Not Check")
-                            }
-                        }
-                    }
-                    xhttp.open("POST", "/check_king", true);
-                    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                    xhttp.send("&x=" + i + "&y=" + j)
-                }
-            }
-        }
-        xhttp.open("POST", "/get_moves", true);
-        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhttp.send("&x=" + i + "&y=" + j)
+socket.on('update_moves', function (results) {
+    console.log(results)
+    for (let i = 0; i < 64; i++) {
+        data[i].resetMoves()
     }
-}
+    for (let r = 0, len = results.length; r < len; r++) {
+        if (results[r]['color'] == color && turn == true) {
+            let result = results[r]
+            let type = Object.keys(result)[0]
+            let i = result[type][0][0]
+            let j = result[type][0][1]
+            data[(i * 8) + j].addMoves(type, result[type])
+        }
+    }
+})
 
-/*
-** Control Pawn Promation
-*/
-function promation(event) {
-    let name = event.currentTarget.getAttribute('data-name')
-    let modal = document.querySelector("#promation")
-    let i = parseInt(modal.getAttribute("data-i"))
-    let j = parseInt(modal.getAttribute("data-j"))
-    let xhttp = new XMLHttpRequest()
-    xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            console.log("Checked")
-            console.log(this.response)
-            // Get All classes
-            let classes = cells[selected[0] * 8 + selected[1]].querySelector("i").getAttribute("class")
-            cells[selected[0] * 8 + selected[1]].querySelector("i").removeAttribute("class")
-            cells[i * 8 + j].querySelector("i").setAttribute("class", classes)
+socket.on('make_move', function (result) {
+    console.log(result)
+    let type = Object.keys(result)[1]
+    if (result['color'] != color) {
+        if (type == 'move') {
+            // Unpack Results
+            let x1 = result['move'][0][0]
+            let y1 = result['move'][0][1]
+            let x2 = result['move'][1][0]
+            let y2 = result['move'][1][1]
+            makeMove(((x1 * 8) + y1), ((x2 * 8) + y2))
+        } else if (type == 'promation') {
+            // Unpack Results
+            let x = result['promation'][0]
+            let y = result['promation'][1]
+            let name = result['promation'][2]
+
             // Change fa-chess-pawn to fa-chess-{Selected Peice}
-            cells[i * 8 + j].querySelector("i").classList.remove("fa-chess-pawn")
-            cells[i * 8 + j].querySelector("i").classList.add("fa-chess-" + name)
-            // Remove Shadows from all cells
-            removeGreen()
-            $('#promation').modal('hide')
-            changePlayer()
-            checkEnd(this.response)
+            cells[(x * 8) + y].querySelector("i").classList.remove("fa-chess-pawn")
+            cells[(x * 8) + y].querySelector("i").classList.add("fa-chess-" + name)
         }
+        changeTurn(true)
     }
-    xhttp.open("POST", "/promation")
-    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send("&x1=" + selected[0] + "&y1=" + selected[1] + "&x2=" + i + "&y2=" + j + "&name=" + name)
-    for (let t = 0; t < 5; t++) {
-        buttons[t].removeEventListener('click', promation)
+})
+
+socket.on('Oppo_Disconnect', function (msg) {
+    document.querySelector("#disconnected p").innerHTML = msg
+    $("#disconnected").modal("show")
+    setTimeout(function () {
+        location.href = "/waiting"
+    }, 2000)
+})
+
+socket.on("end_game", function (msg) {
+    console.log(msg)
+    if (msg == color) {
+        $('#win').modal("show")
+    } else if (msg == 'Tie') {
+        $('#tie').modal("show")
+    } else {
+        $('#lose').modal("show")
     }
+    setTimeout(function () {
+        location.href = "/waiting"
+    }, 2000)
+})
+
+/*
+** A function to move Peice
+** cell1 => The cell to move from
+** cell2 => The cell to move to
+*/
+function makeMove(cell1, cell2) {
+    let classes = cells[cell1].querySelector("i").getAttribute("class")
+    cells[cell1].querySelector("i").removeAttribute("class")
+    cells[cell2].querySelector("i").setAttribute("class", classes)
+    removeMoves()
 }
 
 /*
-** Remove All shadows
+** A function to show move
+** cell => The cell to color
+** clss => The class to add
 */
-function removeGreen() {
-    for (let k = 0; k < 64; k++) {
-        cells[k].classList.remove("green")
-        cells[k].classList.remove("purple")
-        cells[k].classList.remove("yellow")
+function showMove(cell, classes) {
+    cells[cell].classList.add(classes)
+    cells[cell].classList.add('can-move')
+}
+
+/*
+** A function that remove all highlights
+*/
+function removeMoves() {
+    for (let i = 0; i < 64; i++) {
+        cells[i].classList.remove('green')
+        cells[i].classList.remove('yellow')
+        cells[i].classList.remove('purple')
+        cells[i].classList.remove('can-move')
     }
     selected = null
 }
 
 /*
-** Check end of Game
-** 1 if end
-** -1 if tie
+** A function that responsible for Promation
 */
-function checkEnd(response) {
-    if (response == '1') {
-        let modal = document.querySelector("#ended")
-        let winner = (turn == 'White') ? '2' : '1'
-        modal.querySelector(".winner").innerHTML = "Player " + winner + " won!"
-        $('#ended').modal('show')
-    } else if (response == '-1') {
-        let modal = document.querySelector("#ended")
-        modal.querySelector(".winner").innerHTML = "Tie!"
-        $('#ended').modal('show')
+function promation(event) {
+    let name = event.currentTarget.getAttribute('data-name')
+    let modal = document.querySelector("#promation")
+    let x1 = parseInt(modal.getAttribute("data-x1"))
+    let y1 = parseInt(modal.getAttribute("data-y1"))
+    let x2 = parseInt(modal.getAttribute("data-x2"))
+    let y2 = parseInt(modal.getAttribute("data-y2"))
+
+    // Change fa-chess-pawn to fa-chess-{Selected Peice}
+    cells[(x2 * 8) + y2].querySelector("i").classList.remove("fa-chess-pawn")
+    cells[(x2 * 8) + y2].querySelector("i").classList.add("fa-chess-" + name)
+
+    // Send Data To the server
+    let move = { 'promation': [[x1, y1], [x2, y2]], 'name': name }
+    socket.emit('make_move', move)
+
+    // Remove Event Listener
+    let buttons = modal.querySelectorAll("button")
+    for (let i = 0; i < 5; i++) {
+        buttons[i].removeEventListener('click', promation)
     }
+    $('#promation').modal('hide')
 }
 
-function changePlayer() {
-    turn = (turn == 'White') ? 'Black' : 'White'
+/*
+** Change Turn
+*/
+function changeTurn(bool) {
+    if (bool == true) {
+        document.querySelectorAll("h1")[1].style.display = 'None'
+        document.querySelectorAll("h1")[0].style.display = 'Block'
+    } else {
+        document.querySelectorAll("h1")[0].style.display = 'None'
+        document.querySelectorAll("h1")[1].style.display = 'Block'
+    }
+    turn = bool
 }
-

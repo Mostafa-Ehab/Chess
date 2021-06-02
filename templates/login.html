@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link href="static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/css/fontawesome.min.css" rel="stylesheet">
+    <link href="static/css/regular.min.css" rel="stylesheet">
+    <link href="static/css/solid.min.css" rel="stylesheet">
+
+    <link href="favicon.ico" rel="icon">
+
+    <link href="static/css/style.css" rel="stylesheet">
+
+    <title> Chess Game </title>
+</head>
+
+<body class="login">
+    <h1> Chess </h1>
+    <div class="container">
+        <form action="/login" method='POST'>
+            <div class="form-group">
+                <!-- <label for="name">Enter your name</label> -->
+                <input type="text" class="form-control" id="name" aria-describedby="name" placeholder="Enter name"
+                    autocomplete="off" name="name">
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <label for="white" class='white-label btn-primary'>
+                        <a class='btn'>
+                            <i class="fa fa-chess-king"></i>
+                        </a>
+                        <p class="text-center"> White </p>
+                    </label>
+                    <input type='radio' value='White' name='color' id='white' checked>
+                </div>
+                <div class="col-6">
+                    <label for="black" class='black-label'>
+                        <a class='btn'>
+                            <i class="fa fa-chess-king"></i>
+                        </a>
+                        <p class="text-center"> Black </p>
+                    </label>
+                    <input type='radio' value='Black' name='color' id='black'>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary"> Start Game </button>
+        </form>
+    </div>
+    <script src="static/js/jquery-3.5.1.min.js"></script>
+    <script src="static/js/bootstrap.min.js"></script>
+    <script src="static/js/login.js"></script>
+</body>
+
+</html>

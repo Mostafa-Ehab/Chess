@@ -7,23 +7,120 @@
     margin: 0;
 }
 
-/*
-** Table Styles
-** Date: 28 May 2021
-*/
-
 h1 {
     text-align: center;
     margin-top: 30px;
 }
 
-table {
+/*
+** Start Login Form
+** Date: 1 June 2021
+*/
+
+.login .container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+}
+
+.login .black-label {
+    color: #000;
+    width: 100%;
+}
+
+.login .white-label{
+    color: #eba83a;
+    width: 100%;
+}
+
+.login .black-label a {
+    font-size: 5rem;
+    text-align: center;
+    color: #000;
+    width: 100%;
+}
+
+.login .white-label a {
+    font-size: 5rem;
+    text-align: center;
+    color: #eba83a;
+    width: 100%;
+}
+
+.login input[type='radio'] {
+    position: absolute;
+    left: 10px;
+    visibility: hidden;
+}
+
+.login .selected-color {
+    background-color: #f00;
+}
+
+/*
+** Search Page
+** Date: 1 June 2021
+*/
+.waiting form {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     border-collapse: separate;
     width: 400px;
+}
+
+.waiting .fill {
+    bottom: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(100, 100, 100, 0.5);
+    display: none;
+}
+
+.waiting .msg-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 10px 20px;
+}
+
+.waiting .temp-form {
+    display: none;
+}
+
+
+/*
+** Table Styles
+** Date: 28 May 2021
+*/
+
+.white-board {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-collapse: separate;
+    width: 400px;
+}
+
+.black-board {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(180deg);
+    border-collapse: separate;
+    width: 400px;
+}
+
+.black-board td {
+    transform: rotate(180deg);
 }
 
 table td {

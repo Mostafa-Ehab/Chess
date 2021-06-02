@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link href="static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/css/fontawesome.min.css" rel="stylesheet">
+    <link href="static/css/regular.min.css" rel="stylesheet">
+    <link href="static/css/solid.min.css" rel="stylesheet">
+
+    <link href="favicon.ico" rel="icon">
+
+    <link href="static/css/style.css" rel="stylesheet">
+
+    <title> Chess Game </title>
+</head>
+
+<body class="waiting">
+    <h1> Chess </h1>
+    <div class="container">
+        <form action="#" method='POST'>
+            <div class="form-group">
+                <input type="text" class="form-control" id="code" aria-describedby="code" placeholder="Enter code"
+                    autocomplete="off" name="code" required>
+            </div>
+            <button id="submit" class="btn btn-primary"> Start Game </button>
+        </form>
+    </div>
+    <div class="fill">
+        <div class="msg-container">
+            <span class="spinner-border spinner-border-sm text-muted"></span>
+            <span class="msg">waiting</span>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="disconnected" role="dialog" aria-labelledby="disconnected" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Disconnected</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="static/js/jquery-3.5.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+    <script src="static/js/bootstrap.min.js"></script>
+    <script src="static/js/waiting.js"></script>
+</body>
+
+</html>

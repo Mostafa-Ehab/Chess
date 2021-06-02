@@ -79,43 +79,6 @@ class Rook(Peice):
         else:
             return temps
 
-    def check_castle(self, board):
-        castle = ['Castle']
-        if self.moved == False:
-            if self.y == 7:
-                if board[self.x][self.y - 3] != None and board[self.x][self.y - 3].moved == False:
-                    if board[self.x][self.y - 1] == None and board[self.x][self.y - 2] == None:
-                        color = board[self.x][self.y].get_color()
-
-                        check = False
-                        # Check if the cell is Checked by the emeny
-                        for i in range(8):
-                            for j in range(8):
-                                if board[i][j] != None and board[i][j].get_color() != color:
-                                    for xk, yk in board[i][j].get_moves(board, king_state=False):
-                                        if xk == self.x and yk in [self.y - 1, self.y - 2]:
-                                            check = True
-                        if not check:
-                            castle.append((self.x, self.y - 2))
-
-            else:
-                if board[self.x][self.y + 4] != None and board[self.x][self.y + 4].moved == False:
-                    if board[self.x][self.y + 1] == None and board[self.x][self.y + 2] == None and board[self.x][self.y + 3] == None:
-                        color = board[self.x][self.y].get_color()
-
-                        check = False
-                        # Check if the cells is Checked by the enemy
-                        for i in range(8):
-                            for j in range(8):
-                                if board[i][j] != None and board[i][j].get_color() != color:
-                                    for xk, yk in board[i][j].get_moves(board, king_state=False):
-                                        if xk == self.x and yk in [self.y + 2, self.y + 3]:
-                                            check = True
-                        if not check:
-                            castle.append((self.x, self.y + 3))
-
-        return castle if castle != ['Castle'] else None
-
 
 class Bishop(Peice):
     def __str__(self):
@@ -248,17 +211,21 @@ class Pawn(Peice):
         moves = []
         if king_state:
             for x2, y2 in temps:
-                print(
-                    f"Checking king state if moved {board[self.x][self.y].get_name()} to {(x2, y2)}")
                 if check_king_state(self.x, self.y, x2, y2, board):
                     moves.append((x2, y2))
-
-            if self.x in [1, 6] and self.moved == True:
-                moves = [['Upgrade', cell] for cell in moves]
 
             return moves
         else:
             return temps
+
+    def get_promation(self, board):
+        moves = []
+        temps = self.get_moves(board)
+        for x, y in temps:
+            if x in [0, 7] and self.moved == True:
+                moves.append((x, y))
+
+        return moves
 
 
 class Queen(Peice):
@@ -374,54 +341,51 @@ class King(Peice):
                 if check_king_state(self.x, self.y, x2, y2, board):
                     moves.append((x2, y2))
 
-            castle = self.check_castle(board)
-            if castle != None:
-                moves.append(castle)
-
             return moves
         else:
             return temps
 
-    def check_castle(self, board):
-        castle = ['Castle']
+    def get_castle(self, board):
+        castle = []
         if self.moved == False:
-            if board[self.x][self.y + 3] != None and board[self.x][self.y + 3].moved == False:
-                if board[self.x][self.y + 1] == None and board[self.x][self.y + 2] == None:
-                    color = board[self.x][self.y].get_color()
+            if board[self.x][self.y + 3] != None and board[self.x][self.y + 3].moved == False \
+                    and board[self.x][self.y + 1] == None and board[self.x][self.y + 2] == None:
+                # Color of the King
+                color = board[self.x][self.y].get_color()
 
-                    check = False
-                    # Check if the cell is Checked by the emeny
-                    for i in range(8):
-                        for j in range(8):
-                            if board[i][j] != None and board[i][j].get_color() != color:
-                                for xk, yk in board[i][j].get_moves(board, king_state=False):
-                                    if xk == self.x and yk in [self.y + 1, self.y + 2]:
-                                        check = True
-                    if not check:
-                        castle.append((self.x, self.y + 2))
+                check = False
+                # Check if the cell is Checked by the emeny
+                for i in range(8):
+                    for j in range(8):
+                        if board[i][j] != None and board[i][j].get_color() != color:
+                            for xk, yk in board[i][j].get_moves(board, king_state=False):
+                                if xk == self.x and yk in [self.y + 1, self.y + 2]:
+                                    check = True
+                if not check:
+                    castle.append((self.x, self.y + 2, self.x,
+                                   self.y + 3, self.x, self.y + 1))
 
-            if board[self.x][self.y - 4] != None and board[self.x][self.y - 4].moved == False:
-                if board[self.x][self.y - 1] == None and board[self.x][self.y - 2] == None and board[self.x][self.y - 3] == None:
-                    color = board[self.x][self.y].get_color()
+            if board[self.x][self.y - 4] != None and board[self.x][self.y - 4].moved == False \
+                    and board[self.x][self.y - 1] == None and board[self.x][self.y - 2] == None and board[self.x][self.y - 3] == None:
+                # Color of the King
+                color = board[self.x][self.y].get_color()
 
-                    check = False
-                    # Check if the cells is Checked by the enemy
-                    for i in range(8):
-                        for j in range(8):
-                            if board[i][j] != None and board[i][j].get_color() != color:
-                                for xk, yk in board[i][j].get_moves(board, king_state=False):
-                                    if xk == self.x and yk in [self.y - 1, self.y - 2]:
-                                        check = True
-                    if not check:
-                        castle.append((self.x, self.y - 2))
+                check = False
+               # Check if the cells is Checked by the enemy
+                for i in range(8):
+                    for j in range(8):
+                        if board[i][j] != None and board[i][j].get_color() != color:
+                            for xk, yk in board[i][j].get_moves(board, king_state=False):
+                                if xk == self.x and yk in [self.y - 1, self.y - 2]:
+                                    check = True
+                if not check:
+                    castle.append((self.x, self.y - 2, self.x,
+                                   self.y - 4, self.x, self.y - 1))
 
-        return castle if castle != ['Castle'] else None
+        return castle if castle != [] else None
 
 
 def check_validity(x1, y1, x2, y2, board):
-    print(board[x1][y1])
-    print((x2, y2))
-    print()
     if x1 == x2 and y1 == y2:
         return False
 
@@ -437,7 +401,6 @@ def check_validity(x1, y1, x2, y2, board):
     return False
 
 
-# Simulate the game to Check the King If the Game is played
 def check_king_state(x1, y1, x2, y2, board):
     temp = copy.deepcopy(board)
     color = board[x1][y1].get_color()
@@ -461,27 +424,39 @@ def check_king_state(x1, y1, x2, y2, board):
     return True
 
 
-def check_end(board, turn):
-    ended = True
+def send_moves(board):
+    data = []
     for i in range(8):
         for j in range(8):
-            # Check the player has any game
-            if ended == True and board[i][j] != None and board[i][j].get_color() == turn:
-                result = board[i][j].get_moves(board)
-                if len(result) != 0:
-                    # There is anther a game for not King peice
-                    if board[i][j].get_name() != 'King':
-                        return False
-                    # The King have a game
-                    ended = False
-                    break
+            if board[i][j] != None:
+                for x, y in board[i][j].get_moves(board):
+                    # Normal Move
+                    data.append({'move': [(i, j), (x, y)],
+                                 'color': board[i][j].get_color()})
 
-    if ended == False:
-        for i in range(8):
-            for j in range(8):
-                # Check if the other player has a game
-                if board[i][j] != None and board[i][j].get_name() != 'King':
-                    return False
+                if board[i][j].get_name() == 'King':
+                    # King Castle
+                    castle = board[i][j].get_castle(board)
+                    if castle != None:
+                        for kx2, ky2, rx1, ry1, rx2, ry2 in castle:
+                            data.append(
+                                {'castle': [(i, j), (kx2, ky2), (rx1, ry1), (rx2, ry2)], 'color': board[i][j].get_color()})
 
-    # Only to Kings Left
-    return str(1) if ended == True else str(-1)
+                if board[i][j].get_name() == 'Pawn':
+                    # Pawn Promation
+                    for x, y in board[i][j].get_promation(board):
+                        data.append({'promation': [(i, j), (x, y)], 'color': board[i][j].get_color()})
+                        data.remove({'move': [(i, j), (x, y)], 'color': board[i][j].get_color()})
+    return data
+
+
+def escape(s):
+        """
+        Escape special characters.
+
+        https://github.com/jacebrowning/memegen#special-characters
+        """
+        for old, new in [("-", "--"), (" ", "-"), ("_", "__"), ("?", "~q"),
+                         ("%", "~p"), ("#", "~h"), ("/", "~s"), ("\"", "''")]:
+            s = s.replace(old, new)
+        return s
