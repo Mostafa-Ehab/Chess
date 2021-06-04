@@ -112,27 +112,29 @@ for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
         data[(i * 8) + j] = new Cell(i, j)
         cells[(i * 8) + j].addEventListener("click", function (event) {
-            // No selected Cell
-            if (selected == null) {
-                data[(i * 8 + j)].showMoves()
-                selected = [i, j]
+            if (turn == true) {
+                // No selected Cell
+                if (selected == null) {
+                    data[(i * 8 + j)].showMoves()
+                    selected = [i, j]
 
-                // Current Selected Cell
-            } else if (selected[0] == i && selected[1] == j) {
-                removeMoves()
-            }
+                    // Current Selected Cell
+                } else if (selected[0] == i && selected[1] == j) {
+                    removeMoves()
+                }
 
-            // Cell that can make a move
-            else if (event.currentTarget.classList.contains("can-move")) {
-                data[(selected[0] * 8) + selected[1]].makeMoves(i, j)
-                removeMoves()
-            }
+                // Cell that can make a move
+                else if (event.currentTarget.classList.contains("can-move")) {
+                    data[(selected[0] * 8) + selected[1]].makeMoves(i, j)
+                    removeMoves()
+                }
 
-            // An Empty or another Cell
-            else {
-                removeMoves()
-                data[(i * 8 + j)].showMoves()
-                selected = [i, j]
+                // An Empty or another Cell
+                else {
+                    removeMoves()
+                    data[(i * 8 + j)].showMoves()
+                    selected = [i, j]
+                }
             }
         })
     }
@@ -200,7 +202,7 @@ socket.on("end_game", function (msg) {
         $('#lose').modal("show")
     }
     setTimeout(function () {
-        location.href = "/waiting"
+        location.href = "/"
     }, 2000)
 })
 
@@ -214,6 +216,8 @@ function makeMove(cell1, cell2) {
     cells[cell1].querySelector("i").removeAttribute("class")
     cells[cell2].querySelector("i").setAttribute("class", classes)
     removeMoves()
+    cells[cell1].classList.add("yellow-border")
+    cells[cell2].classList.add("red-border")
 }
 
 /*
@@ -236,6 +240,8 @@ function removeMoves() {
         cells[i].classList.remove('purple')
         cells[i].classList.remove('red')
         cells[i].classList.remove('can-move')
+        cells[i].classList.remove('yellow-border')
+        cells[i].classList.remove('red-border')
     }
     selected = null
 }

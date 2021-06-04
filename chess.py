@@ -2,11 +2,12 @@ import copy
 
 
 class Peice:
-    def __init__(self, x, y, color):
+    def __init__(self, x, y, color, value):
         self.x = x
         self.y = y
         self.color = color
         self.moved = False
+        self.value = value
 
     def get_pos(self):
         return self.pos
@@ -16,6 +17,9 @@ class Peice:
 
     def get_pos(self):
         return (self.x, self.y)
+
+    def get_value(self):
+        return self.value
 
     def change_pos(self, x, y):
         self.x = x

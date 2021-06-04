@@ -1,4 +1,5 @@
-from ai import ai_get_move
+import sys
+from ai import *
 from os import name
 from flask import Flask, render_template, request, redirect, session
 # from flask.signals import Namespace
@@ -9,6 +10,12 @@ from werkzeug.utils import redirect
 from chess import *
 from helper import *
 import secrets
+
+import logging
+log = logging.getLogger('werkzeug')
+log.disabled = True
+
+sys.setrecursionlimit(10000)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -22,20 +29,21 @@ Session(app)
 USERS = []
 GAMES = []
 AI_GAME = []
+AI_RECURSION = {}
 
 
 BOARDS = {}
 board = [
-    [Rook(0, 0, "Black"), Knight(0, 1, "Black"), Bishop(0, 2, "Black"), Queen(0, 3, "Black"),
-     King(0, 4, "Black"), Bishop(0, 5, "Black"), Knight(0, 6, "Black"), Rook(0, 7, "Black")],
-    [Pawn(1, i, "Black") for i in range(8)],
+    [Rook(0, 0, "Black", -25), Knight(0, 1, "Black", -24), Bishop(0, 2, "Black", -23), Queen(0, 3, "Black", -100),
+     King(0, 4, "Black", 0), Bishop(0, 5, "Black", -23), Knight(0, 6, "Black", -24), Rook(0, 7, "Black", -25)],
+    [Pawn(1, i, "Black", -10) for i in range(8)],
     [None] * 8,
     [None] * 8,
     [None] * 8,
     [None] * 8,
-    [Pawn(6, i, "White") for i in range(8)],
-    [Rook(7, 0, "White"), Knight(7, 1, "White"), Bishop(7, 2, "White"), Queen(7, 3, "White"),
-     King(7, 4, "White"), Bishop(7, 5, "White"), Knight(7, 6, "White"), Rook(7, 7, "White")],
+    [Pawn(6, i, "White", 10) for i in range(8)],
+    [Rook(7, 0, "White", 25), Knight(7, 1, "White", 24), Bishop(7, 2, "White", 23), Queen(7, 3, "White", 100),
+     King(7, 4, "White", 0), Bishop(7, 5, "White", 23), Knight(7, 6, "White", 24), Rook(7, 7, "White", 25)],
 ]
 
 TURNS = {}
@@ -64,6 +72,7 @@ def login():
                     session['token'] = token
                     BOARDS[token] = copy.deepcopy(board)
                     TURNS[token] = 'White'
+                    AI_RECURSION[token] = 1
 
                     data = {'token': token, 'status': 'playing'}
                     AI_GAME.append(data)
@@ -304,35 +313,39 @@ def make_ai_game_move(response):
                 for data in GAMES:
                     if data['token'] == token:
                         data['status'] = 'ended'
+            else:
 
-            # Call AI to play
-            response = ai_get_move()
+                # Call AI to play
+                response = ai_get_move(
+                    BOARDS[token], turn, AI_RECURSION[token])
+                # AI_RECURSION[token] += 0
+                # alphabeta(board, 5, -999, 999, turn)
 
-            # Apply AI Play and send it to the player
-            moves = make_move(BOARDS[token], response)
-            for row in moves:
-                emit('make_move', row, namespace='/ai-game')
+                # Apply AI Play and send it to the player
+                moves = make_move(BOARDS[token], response)
+                for row in moves:
+                    emit('make_move', row, namespace='/ai-game')
 
-            # Get all available moves and send it to the player
-            data, king = get_moves(BOARDS[token], turn)
-            emit('update_moves', data, namespace='/ai-game')
+                # Get all available moves and send it to the player
+                data, king = get_moves(BOARDS[token], turn)
+                emit('update_moves', data, namespace='/ai-game')
 
-            # Change turn
-            TURNS[token] = 'Black' if turn == 'White' else 'White'
-            turn = TURNS[token]
+                # Change turn
+                TURNS[token] = 'Black' if turn == 'White' else 'White'
+                turn = TURNS[token]
 
-            # Check if King is Checked
-            if is_checked(data, king, turn) != None:
-                emit('check', {'king': king}, namespace='/ai-game')
+                # Check if King is Checked
+                if is_checked(data, king, turn) != None:
+                    emit('check', {'king': king}, namespace='/ai-game')
 
-            # Check if game Ended
-            ended = check_end(BOARDS[token], turn)
-            if ended != None:
-                emit('end_game', ended, namespace='/ai-game')
-                # End Game
-                for data in GAMES:
-                    if data['token'] == token:
-                        data['status'] = 'ended'
+                # Check if game Ended
+                ended = check_end(BOARDS[token], turn)
+                if ended != None:
+                    emit('end_game', ended, namespace='/ai-game')
+                    # End Game
+                    for data in GAMES:
+                        if data['token'] == token:
+                            data['status'] = 'ended'
 
 
 if __name__ == '__main__':

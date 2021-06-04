@@ -222,6 +222,8 @@ function makeMove(cell1, cell2) {
     cells[cell1].querySelector("i").removeAttribute("class")
     cells[cell2].querySelector("i").setAttribute("class", classes)
     removeMoves()
+    cells[cell1].classList.add("yellow-border")
+    cells[cell2].classList.add("red-border")
 }
 
 /*
@@ -244,6 +246,8 @@ function removeMoves() {
         cells[i].classList.remove('purple')
         cells[i].classList.remove('red')
         cells[i].classList.remove('can-move')
+        cells[i].classList.remove('yellow-border')
+        cells[i].classList.remove('red-border')
     }
     selected = null
 }

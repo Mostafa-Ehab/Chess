@@ -171,6 +171,14 @@ table td.yellow {
     opacity: 0.5;
 }
 
+table td.red-border{
+    border: #f00 solid 3px;
+}
+
+table td.yellow-border{
+    border: #ff0 solid 3px;
+}
+
 table td .black-peice {
     color: #000;
 }
