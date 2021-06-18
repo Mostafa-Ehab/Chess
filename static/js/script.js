@@ -1,5 +1,4 @@
 const socket = io("/game")
-// socket.emit('move', 'get')
 const color = (document.querySelector("table").classList.contains('white-board')) ? 'White' : 'Black'
 let turn = (color == 'White') ? true : false
 changeTurn(turn)
@@ -12,97 +11,46 @@ class Cell {
         this.moves = []
     }
 
-    addMoves(type, result) {
-        // Set Moves Object
+    addAction(type, result) {
         let move = {}
-        if (type == 'move') {
-            // Unpack Results
-            let x1 = result[0][0]
-            let y1 = result[0][1]
-            let x2 = result[1][0]
-            let y2 = result[1][1]
+        // Unpack Results
+        let x2 = result[1][0]
+        let y2 = result[1][1]
 
-            move['type'] = 'move'
-            move['coor'] = String(x2) + String(y2)
-            move['show'] = function () { showMove((x2 * 8) + y2, 'green') }
-            move['make'] = function () { makeMove((x1 * 8) + y1, (x2 * 8) + y2) }
-            move['send'] = { 'move': [[x1, y1], [x2, y2]] }
+        move['x2'] = x2
+        move['y2'] = y2
+        move['type'] = type
+        move['coor'] = String(x2) + String(y2)
+        move['make'] = function () { sendAction(type, result) }
 
-        } else if (type == 'promation') {
-            // Unpack Results
-            let x1 = result[0][0]
-            let y1 = result[0][1]
-            let x2 = result[1][0]
-            let y2 = result[1][1]
-
-            move['type'] = 'promation'
-            move['coor'] = String(x2) + String(y2)
-            move['show'] = function () { showMove((x2 * 8) + y2, 'yellow') }
-            move['make'] = function () {
-                makeMove((x1 * 8) + y1, (x2 * 8) + y2)
-                /*
-                ** Show Modal that ask for the Promation
-                */
-                $("#promation").modal('show')
-                let modal = document.querySelector("#promation")
-                modal.setAttribute("data-x1", x1)
-                modal.setAttribute("data-y1", y1)
-                modal.setAttribute("data-x2", x2)
-                modal.setAttribute("data-y2", y2)
-
-                let buttons = modal.querySelectorAll("button")
-                for (let k = 0, len = buttons.length; k < len; k++) {
-                    buttons[k].addEventListener("click", promation)
-                }
-            }
-            move['send'] = { 'promation': [[x1, y1], [x2, y2]] }
-
-        } else if (type == 'castle') {
-            // Unpack Results
-            let kx1 = result[0][0]
-            let ky1 = result[0][1]
-            let kx2 = result[1][0]
-            let ky2 = result[1][1]
-            let rx1 = result[2][0]
-            let ry1 = result[2][1]
-            let rx2 = result[3][0]
-            let ry2 = result[3][1]
-
-
-            move['type'] = 'castle'
-            move['coor'] = String(kx2) + String(ky2)
-            move['show'] = function () { showMove((kx2 * 8) + ky2, 'purple') }
-            move['make'] = function () {
-                makeMove((kx1 * 8) + ky1, (kx2 * 8) + ky2)
-                makeMove((rx1 * 8) + ry1, (rx2 * 8) + ry2)
-            }
-            move['send'] = { 'castle': [[kx1, ky1], [kx2, ky2]] }
-        }
-        // Push Object to the Array
         this.moves.push(move)
     }
 
-    resetMoves() {
-        this.moves = []
-    }
-
-    showMoves() {
+    makeAction(x2, y2) {
         for (let i = 0, len = this.moves.length; i < len; i++) {
-            this.moves[i].show()
-        }
-    }
-
-    makeMoves(x, y) {
-        for (let i = 0, len = this.moves.length; i < len; i++) {
-            if (this.moves[i]['coor'] == String(x) + String(y)) {
+            if (this.moves[i]['coor'] == String(x2) + String(y2)) {
                 this.moves[i].make()
-                if (this.moves[i]['type'] == 'move' || this.moves[i]['type'] == 'castle') {
-                    socket.emit('make_move', this.moves[i].send)
-                }
+                break
             }
         }
-        changeTurn(false)
-        removeMoves()
+    }
+
+    showAction() {
+        for (let i = 0, len = this.moves.length; i < len; i++) {
+            let x2 = this.moves[i]['x2']
+            let y2 = this.moves[i]['y2']
+            if (this.moves[i]['type'] == "move") {
+                showAction(x2 * 8 + y2, 'green')
+            } else if (this.moves[i].type == "promation") {
+                showAction(x2 * 8 + y2, 'yellow')
+            } else {
+                showAction(x2 * 8 + y2, 'purple')
+            }
+        }
+    }
+
+    resetAction() {
+        this.moves = []
     }
 }
 
@@ -110,128 +58,175 @@ let data = {}
 let selected = null
 for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
-        data[(i * 8) + j] = new Cell(i, j)
-        cells[(i * 8) + j].addEventListener("click", function (event) {
+        data[i * 8 + j] = new Cell(i, j)
+        cells[i * 8 + j].addEventListener("click", function (event) {
             // No selected Cell
             if (selected == null) {
-                data[(i * 8 + j)].showMoves()
+                data[(i * 8 + j)].showAction()
                 selected = [i, j]
+            }
 
-                // Current Selected Cell
-            } else if (selected[0] == i && selected[1] == j) {
-                removeMoves()
+            // Current Selected Cell
+            else if (selected[0] == i && selected[1] == j) {
+                removeAction()
             }
 
             // Cell that can make a move
             else if (event.currentTarget.classList.contains("can-move")) {
-                data[(selected[0] * 8) + selected[1]].makeMoves(i, j)
-                removeMoves()
+                data[(selected[0] * 8) + selected[1]].makeAction(i, j)
+                removeAction()
             }
 
             // An Empty or another Cell
             else {
-                removeMoves()
-                data[(i * 8 + j)].showMoves()
+                removeAction()
+                data[(i * 8 + j)].showAction()
                 selected = [i, j]
             }
         })
     }
 }
 
-/*
-** A function that Responsible for Updating move list from server
-*/
-socket.on('update_moves', function (results) {
-    console.log(results)
+socket.on("update_action", function (response) {
+    console.log(response)
+    // Remove Check Mate Alert
     for (let i = 0; i < 64; i++) {
-        data[i].resetMoves()
+        cells[i].classList.remove('red')
     }
-    for (let r = 0, len = results.length; r < len; r++) {
-        if (results[r]['color'] == color && turn == true) {
-            let result = results[r]
-            let type = Object.keys(result)[0]
-            let i = result[type][0][0]
-            let j = result[type][0][1]
-            data[(i * 8) + j].addMoves(type, result[type])
-        }
-    }
-})
-
-socket.on('make_move', function (result) {
-    console.log(result)
-    let type = Object.keys(result)[1]
-    if (result['color'] != color) {
-        if (type == 'move') {
-            // Unpack Results
-            let x1 = result['move'][0][0]
-            let y1 = result['move'][0][1]
-            let x2 = result['move'][1][0]
-            let y2 = result['move'][1][1]
-            makeMove(((x1 * 8) + y1), ((x2 * 8) + y2))
-        } else if (type == 'promation') {
-            // Unpack Results
-            let x = result['promation'][0]
-            let y = result['promation'][1]
-            let name = result['promation'][2]
-
-            // Change fa-chess-pawn to fa-chess-{Selected Peice}
-            cells[(x * 8) + y].querySelector("i").classList.remove("fa-chess-pawn")
-            cells[(x * 8) + y].querySelector("i").classList.add("fa-chess-" + name)
-        }
-        changeTurn(true)
+    // Add Moves to Cell
+    for (let i = 0, len = response.length; i < len; i++) {
+        let result = response[i]
+        let type = Object.keys(result)[0]
+        let x1 = result[type][0][0]
+        let y1 = result[type][0][1]
+        data[x1 * 8 + y1].addAction(type, result[type])
     }
 })
 
-socket.on('check', function (king) {
-    console.log(king)
-    let i = king['king'][0]
-    let j = king['king'][1]
+socket.on("make_action", function (response) {
+    let type = Object.keys(response)[0]
+    let result = response[type]
+    let cell1 = (result[0][0] * 8) + result[0][1]
+    let cell2 = (result[1][0] * 8) + result[1][1]
+    // Move the peice
+    pieceMove(cell1, cell2)
+    cells[cell1].classList.add("yellow-border")
+    cells[cell2].classList.add("red-border")
 
-    cells[(i * 8) + j].classList.add("red")
+    // If Action is Castle move the Rook
+    if (type == "castle") {
+        let cell3 = (result[2][0] * 8) + result[2][1]
+        let cell4 = (result[3][0] * 8) + result[3][1]
+        pieceMove(cell3, cell4)
+    }
+    // If Action is Promation
+    else if (type == "promation") {
+        let name = response['name']
+        // Change fa-chess-pawn to fa-chess-{Selected Peice}
+        cells[cell2].querySelector("i").classList.remove("fa-chess-pawn")
+        cells[cell2].querySelector("i").classList.add("fa-chess-" + name)
+    }
 })
 
-socket.on('Oppo_Disconnect', function (msg) {
-    document.querySelector("#disconnected p").innerHTML = msg
-    $("#disconnected").modal("show")
-    setTimeout(function () {
-        location.href = "/waiting"
-    }, 2000)
+socket.on("check_mate", function (response) {
+    // Add red Alert if check mate
+    let cell = (response['king'][0] * 8) + response['king'][1]
+    showAction(cell, "red")
 })
 
 socket.on("end_game", function (msg) {
     console.log(msg)
-    if (msg == color) {
+    if (msg['winner'] == color) {
         $('#win').modal("show")
-    } else if (msg == 'Tie') {
+    } else if (msg['winner'] == 'Tie') {
         $('#tie').modal("show")
     } else {
         $('#lose').modal("show")
     }
     setTimeout(function () {
-        location.href = "/waiting"
-    }, 2000)
+        location.href = "/"
+    }, 3000)
+})
+
+socket.on('oppo_disconnect', function (msg) {
+    document.querySelector("#disconnected p").innerHTML = msg
+    $("#disconnected").modal("show")
+    setTimeout(function () {
+        location.href = "/"
+    }, 3000)
 })
 
 /*
-** A function to move Peice
-** cell1 => The cell to move from
-** cell2 => The cell to move to
+** A function that make and send Action
 */
-function makeMove(cell1, cell2) {
+function sendAction(type, result) {
+    let cell1 = (result[0][0] * 8) + result[0][1]
+    let cell2 = (result[1][0] * 8) + result[1][1]
+    // Move the peice
+    pieceMove(cell1, cell2)
+    removeAction()
+    cells[cell1].classList.add("yellow-border")
+    cells[cell2].classList.add("red-border")
+    // If Action is simple move
+    if (type == "move") {
+        socket.emit("make_action", { "move": result })
+    }
+    // If Action is Castle Move the Rook
+    else if (type == "castle") {
+        let cell3 = (result[2][0] * 8) + result[2][1]
+        let cell4 = (result[3][0] * 8) + result[3][1]
+        pieceMove(cell3, cell4)
+        console.log("Made Castle")
+        // Send Data
+        socket.emit("make_action", { "castle": result })
+    }
+    // If action is promation
+    else {
+        console.log("Promating")
+        $('#promation').modal('show')
+        let div = document.querySelector("#promation")
+        let promat = setInterval(function () {
+            if (div.getAttribute("data-name") != "") {
+                let name = div.getAttribute("data-name")
+                // Change fa-chess-pawn to fa-chess-{Selected Peice}
+                cells[cell2].querySelector("i").classList.remove("fa-chess-pawn")
+                cells[cell2].querySelector("i").classList.add("fa-chess-" + name)
+                div.setAttribute("data-name", "")
+                $('#promation').modal('hide')
+                // Send Data
+                socket.emit("make_action", { "promation": result, "name": name })
+                clearInterval(promat)
+            }
+        }, 100)
+    }
+
+    // Reset Actions and Remove Check Mate Alert
+    for (let i = 0; i < 64; i++) {
+        cells[i].classList.remove('red')
+        data[i].resetAction()
+    }
+}
+
+/*
+** A function that move Piece
+*/
+function pieceMove(cell1, cell2) {
     let classes = cells[cell1].querySelector("i").getAttribute("class")
     cells[cell1].querySelector("i").removeAttribute("class")
     cells[cell2].querySelector("i").setAttribute("class", classes)
-    removeMoves()
-    cells[cell1].classList.add("yellow-border")
-    cells[cell2].classList.add("red-border")
+}
+
+/*
+** Assign clicked button value to Main Div
+*/
+function promation(name) {
+    document.querySelector("#promation").setAttribute("data-name", name)
 }
 
 /*
 ** A function to show move
-** cell => The cell to color
-** clss => The class to add
 */
-function showMove(cell, classes) {
+function showAction(cell, classes) {
     cells[cell].classList.add(classes)
     cells[cell].classList.add('can-move')
 }
@@ -239,12 +234,12 @@ function showMove(cell, classes) {
 /*
 ** A function that remove all highlights
 */
-function removeMoves() {
+function removeAction() {
     for (let i = 0; i < 64; i++) {
         cells[i].classList.remove('green')
         cells[i].classList.remove('yellow')
         cells[i].classList.remove('purple')
-        cells[i].classList.remove('red')
+        // cells[i].classList.remove('red')
         cells[i].classList.remove('can-move')
         cells[i].classList.remove('yellow-border')
         cells[i].classList.remove('red-border')
@@ -253,34 +248,7 @@ function removeMoves() {
 }
 
 /*
-** A function that responsible for Promation
-*/
-function promation(event) {
-    let name = event.currentTarget.getAttribute('data-name')
-    let modal = document.querySelector("#promation")
-    let x1 = parseInt(modal.getAttribute("data-x1"))
-    let y1 = parseInt(modal.getAttribute("data-y1"))
-    let x2 = parseInt(modal.getAttribute("data-x2"))
-    let y2 = parseInt(modal.getAttribute("data-y2"))
-
-    // Change fa-chess-pawn to fa-chess-{Selected Peice}
-    cells[(x2 * 8) + y2].querySelector("i").classList.remove("fa-chess-pawn")
-    cells[(x2 * 8) + y2].querySelector("i").classList.add("fa-chess-" + name)
-
-    // Send Data To the server
-    let move = { 'promation': [[x1, y1], [x2, y2]], 'name': name }
-    socket.emit('make_move', move)
-
-    // Remove Event Listener
-    let buttons = modal.querySelectorAll("button")
-    for (let i = 0; i < 5; i++) {
-        buttons[i].removeEventListener('click', promation)
-    }
-    $('#promation').modal('hide')
-}
-
-/*
-** Change Turn
+** Change Player Turn
 */
 function changeTurn(bool) {
     if (bool == true) {

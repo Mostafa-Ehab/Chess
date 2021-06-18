@@ -19,7 +19,7 @@
 
 <body>
     <div>
-        {% if num == 1 %}
+        {% if num == "Player 2" %}
         <h1> You </h1>
         <h1 style="color: #eba83a"> {{ num }} </h1>
         {% else %}
@@ -135,8 +135,7 @@
     </div>
 
     <!-- Modal -->
-    <div class="modal fade" id="promation" role="dialog" aria-labelledby="promation" aria-hidden="true" data-i=""
-        data-j="" data-name="">
+    <div class="modal fade" id="promation" role="dialog" aria-labelledby="promation" aria-hidden="true" data-name="">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -147,16 +146,16 @@
                 </div>
                 <div class="modal-body">
                     <div class="grid-container">
-                        <button type="button" class="btn btn-outline-primary" data-name="rook">
+                        <button type="button" class="btn btn-outline-primary" onclick="promation('rook')">
                             <i class="fa fa-chess-rook"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-primary" data-name="knight">
+                        <button type="button" class="btn btn-outline-primary" onclick="promation('knight')">
                             <i class="fa fa-chess-knight"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-primary" data-name="bishop">
+                        <button type="button" class="btn btn-outline-primary" onclick="promation('bishop')">
                             <i class="fa fa-chess-bishop"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-primary" data-name="queen">
+                        <button type="button" class="btn btn-outline-primary" onclick="promation('queen')">
                             <i class="fa fa-chess-queen"></i>
                         </button>
                     </div>
