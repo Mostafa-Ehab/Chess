@@ -1,4 +1,4 @@
-const socket = io("/game")
+const socket = io("/ai-game")
 const color = (document.querySelector("table").classList.contains('white-board')) ? 'White' : 'Black'
 let turn = (color == 'White') ? true : false
 changeTurn(turn)

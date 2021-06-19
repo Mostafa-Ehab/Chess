@@ -19,12 +19,22 @@
 
 <body>
     <div>
-        {% if num == "Player 2" %}
+        {% if vs == "ai" %}
+        {% if color == "Black" %}
         <h1> You </h1>
         <h1 style="color: #eba83a"> {{ num }} </h1>
         {% else %}
         <h1 style="color: #eba83a"> You </h1>
         <h1> {{ num }} </h1>
+        {% endif %}
+        {% else %}
+        {% if num == "Player 1" %}
+        <h1> You </h1>
+        <h1 style="color: #eba83a"> {{ num }} </h1>
+        {% else %}
+        <h1 style="color: #eba83a"> You </h1>
+        <h1> {{ num }} </h1>
+        {% endif %}
         {% endif %}
         <table class="{{ color }}-board">
             <tr>

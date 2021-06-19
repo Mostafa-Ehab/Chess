@@ -5,6 +5,12 @@ class Peice:
         self.color = color
         self.moved = False
         self.value = value
+        # self.name = None
+
+    # def __eq__(self, other):
+    #     if self.get_name() == other.get_name() and self.get_color() == other.get_color() and self.moved == other.moved:
+    #         return True
+    #     return False
 
     def get_color(self):
         return self.color
@@ -318,10 +324,12 @@ class King(Peice):
             x, y = self.get_pos()
             if board[x, y + 1] == board[x, y + 2] == None:
                 if board[x, y + 3] != None and board[x, y + 3].moved == False:
-                    actions.append({"castle": (self.get_pos(), (x, y + 2), (x, y + 3), (x, y + 1))})
+                    actions.append(
+                        {"castle": (self.get_pos(), (x, y + 2), (x, y + 3), (x, y + 1))})
 
             if board[x, y - 1] == board[x, y - 2] == None:
                 if board[x, y - 4] != None and board[x, y - 4].moved == False:
-                    actions.append({"castle": (self.get_pos(), (x, y - 2), (x, y - 4), (x, y - 1))})
+                    actions.append(
+                        {"castle": (self.get_pos(), (x, y - 2), (x, y - 4), (x, y - 1))})
 
         return actions

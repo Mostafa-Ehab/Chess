@@ -2,6 +2,7 @@ from piece import *
 from func import *
 import copy
 import numpy as np
+import gc
 
 empty_board = np.array([
     [Rook(0, 0, "Black", -25), Knight(0, 1, "Black", -24), Bishop(0, 2, "Black", -23), Queen(0, 3, "Black", -100),
@@ -30,6 +31,19 @@ class Board:
     def __str__(self):
         self.token
 
+    def __eq__(self, other):
+        if self.turn == other.turn:
+            for i in range(8):
+                for j in range(8):
+                    if (self.board[i, j] != None and other.board[i, j] != None) and \
+                        ((self.board[i, j].get_name() != other.board[i, j].get_name()) or
+                         (self.board[i, j].get_color() != other.board[i, j].get_color()) or
+                         (self.board[i, j].moved != other.board[i, j].moved)):
+                        return False
+            return True
+        else:
+            return False
+
     def get_token(self):
         return self.token
 
@@ -50,6 +64,14 @@ class Board:
             return self.get_white()
         else:
             return self.get_black()
+
+    def get_value(self):
+        value = 0
+        for i in range(8):
+            for j in range(8):
+                if self.board[i, j] != None:
+                    value += self.board[i, j].get_value()
+        return value
 
     def change_turn(self):
         self.turn = "White" if (self.turn == "Black") else "Black"
@@ -115,6 +137,7 @@ class Board:
             prettyList(self.board.tolist())
 
         self.change_turn()
+        gc.collect()
 
     def get_action(self):
         actions = []
@@ -180,6 +203,7 @@ class Board:
                                             print(act)
                                             actions.append(act)
                                 del temp
+        gc.collect()
         return actions
 
     def is_check_mate(self):
@@ -229,3 +253,4 @@ class Board:
     def set_last_actions(self, actions):
         del self.last_actions
         self.last_actions = actions
+        gc.collect()
